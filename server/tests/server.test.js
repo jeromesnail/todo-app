@@ -8,9 +8,7 @@ const { todos } = require('./fixtures/todos');
 
 beforeEach((done) => {
   Todo.remove({})
-    .then(() => {
-      return Todo.insertMany(todos);
-    })
+    .then(() => Todo.insertMany(todos))
     .then(() => done());
 });
 
