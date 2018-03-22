@@ -20,10 +20,11 @@ app.post('/todos', (req, res) => {
   const newTodo = new Todo({ text: req.body.text });
   newTodo.save()
     .then(todo => {
-      res.send({ todo });
+      res.send({ status: 200, todo });
     })
     .catch(e => {
       res.status(400).send({
+        status: 400,
         error: 'Failed to add the todo'
       });
     });
@@ -31,9 +32,12 @@ app.post('/todos', (req, res) => {
 
 app.get('/todos', (req, res) => {
   Todo.find().then(todos => {
-    res.send({ todos });
+    res.send({ status: 200, todos });
   }).catch(e => {
-    res.status(400).send(e)
+    res.status(400).send({
+      status: 400,
+      error: 'Failed to fetch todos'
+    });
   });
 });
 
@@ -41,6 +45,7 @@ app.get('/todos/:id', (req, res) => {
   const id = req.params.id;
   if (!ObjectID.isValid(id)) {
     return res.status(404).send({
+      status: 404,
       error: 'Invalid ID'
     });
   }
@@ -48,12 +53,14 @@ app.get('/todos/:id', (req, res) => {
     .then(todo => {
       if (!todo) {
         return res.status(404).send({
+          status: 404,
           error: 'ID not found'
         });
       }
-      res.send({ todo });
+      res.send({ status: 200, todo });
     }).catch(e => {
       res.status(400).send({
+        status: 400,
         error: 'Request failed'
       });
     });
@@ -63,6 +70,7 @@ app.delete('/todos/:id', (req, res) => {
   const id = req.params.id;
   if (!ObjectID.isValid(id)) {
     return res.status(404).send({
+      status: 404,
       error: 'Invalid ID'
     });
   }
@@ -70,13 +78,15 @@ app.delete('/todos/:id', (req, res) => {
     .then(todo => {
       if (!todo) {
         return res.status(404).send({
+          status: 404,
           error: 'ID not found'
         });
       }
-      res.send({ todo });
+      res.send({ status: 200, todo });
     })
     .catch(e => {
       res.status(400).send({
+        status: 400,
         error: 'Request failed'
       });
     });
@@ -87,6 +97,7 @@ app.patch('/todos/:id', (req, res) => {
   const body = _.pick(req.body, ['text', 'completed']);
   if (!ObjectID.isValid(id)) {
     return res.status(404).send({
+      status: 404,
       error: 'Invalid ID'
     });
   }
@@ -100,12 +111,14 @@ app.patch('/todos/:id', (req, res) => {
     .then(todo => {
       if (!todo) {
         return res.status(404).send({
+          status: 404,
           error: 'ID not found'
         });
       }
-      res.send({ todo });
+      res.send({ status: 200, todo });
     }).catch(e => {
       res.status(400).send({
+        status: 400,
         error: 'Request failed'
       });
     });
@@ -119,18 +132,18 @@ app.post('/users', (req, res) => {
       return user.generateAuthToken();
     })
     .then(token => {
-      res.header('x-auth', token).send({ user })
+      res.header('x-auth', token).send({ status: 200, user })
     })
     .catch(e => {
       res.status(400).send({
-        error: 'Failed to add the user',
-        description: e
+        status: 400,
+        error: 'Failed to add the user'
       });
     });
 });
 
 app.get('/users/me', authenticate, (req, res) => {
-  res.send({ user: req.user });
+  res.send({ status: 200, user: req.user });
 });
 
 app.listen(port, () => {
