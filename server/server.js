@@ -16,13 +16,15 @@ const app = express();
 app.use(bodyParser.json());
 
 app.post('/todos', (req, res) => {
-  const todo = new Todo({ text: req.body.text });
-  todo.save()
-    .then(doc => {
-      res.send(doc);
+  const newTodo = new Todo({ text: req.body.text });
+  newTodo.save()
+    .then(todo => {
+      res.send({ todo });
     })
     .catch(e => {
-      res.status(400).send(e);
+      res.status(400).send({
+        error: 'Failed to add the todo'
+      });
     });
 });
 
@@ -104,6 +106,24 @@ app.patch('/todos/:id', (req, res) => {
     }).catch(e => {
       res.status(400).send({
         error: 'Request failed'
+      });
+    });
+});
+
+app.post('/users', (req, res) => {
+  const body = _.pick(req.body, ['email', 'password']);
+  const user = new User(body);
+  user.save()
+    .then(() => {
+      return user.generateAuthToken();
+    })
+    .then(token => {
+      res.header('x-auth', token).send({ user })
+    })
+    .catch(e => {
+      res.status(400).send({
+        error: 'Failed to add the user',
+        description: e
       });
     });
 });
