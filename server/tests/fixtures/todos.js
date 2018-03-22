@@ -5,7 +5,9 @@ const todos = [{
     text: 'First test todo'
   }, {
     _id: new ObjectID,
-    text: 'Secopns test todo'
+    text: 'Secopns test todo',
+    completed: true,
+    completedAt: 1521713807287
   }
 ];
 
