@@ -38,7 +38,7 @@ module.exports = (app) => {
       .catch(e => {
         res.status(400).send({
           status: 400,
-          error: "Failed to anthentificate"
+          error: 'Failed to anthentificate'
         });
       });
   });

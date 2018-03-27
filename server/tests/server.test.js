@@ -263,8 +263,56 @@ describe('POST /users', () => {
           .then(users => {
             expect(users.length).toBe(2);
             done();
-          });
+          })
+          .catch(e => done(e));
       });
 
   });
+});
+
+describe('POST /users/login', () => {
+  it('should login user and return auth token', done => {
+    const { email, password } = users[1];
+    request(app)
+      .post('/users/login')
+      .send({ email, password })
+      .expect(200)
+      .expect(res => {
+        expect(res.headers['x-auth']).toExist();
+      })
+      .end((e, res) => {
+        if (e) return done(e);
+        User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens[0]).toInclude({
+              access: 'auth',
+              token: res.headers['x-auth']
+            });
+            done();
+          })
+          .catch(e => done(e));
+      });
+  });
+
+  it('should reject invalid login', done => {
+    const email = users[0].email;
+    const password = 'lolilolprout';
+    request(app)
+      .post('/users/login')
+      .send({ email, password })
+      .expect(400)
+      .expect(res => {
+        expect(res.body.error).toBe('Failed to anthentificate');
+        expect(res.headers['x-auth']).toNotExist();
+      })
+      .end((e, res) => {
+        if (e) return done(e);
+        User.findById(users[1]._id)
+          .then(user => {
+            expect(user.tokens.length).toBe(0);
+            done();
+          })
+          .catch(e => done(e));
+      });
+  })
 });
