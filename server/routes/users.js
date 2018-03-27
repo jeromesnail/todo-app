@@ -12,7 +12,7 @@ module.exports = (app) => {
         return user.generateAuthToken();
       })
       .then(token => {
-        res.header('x-auth', token).send({ status: 200, user })
+        res.header('x-auth', token).send({ status: 200, user });
       })
       .catch(e => {
         res.status(400).send({
@@ -24,6 +24,23 @@ module.exports = (app) => {
 
   app.get('/users/me', authenticate, (req, res) => {
     res.send({ status: 200, user: req.user });
+  });
+
+  app.post('/users/login', (req, res) => {
+    const { email, password } = _.pick(req.body, ['email', 'password']);
+    User.findByCredentials(email, password)
+      .then(user => {
+        return user.generateAuthToken()
+          .then(token => {
+            res.header('x-auth', token).send({ status: 200, user });
+          });
+      })
+      .catch(e => {
+        res.status(400).send({
+          status: 400,
+          error: "Failed to anthentificate"
+        });
+      });
   });
 
 };
