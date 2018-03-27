@@ -43,4 +43,19 @@ module.exports = (app) => {
       });
   });
 
+  app.delete('/users/me/token', authenticate, (req, res) => {
+    req.user.removeToken(req.token)
+      .then(() => {
+        res.status(200).send({
+          status: 200,
+          message: 'User correctly logged out'
+        });
+      }).catch(e => {
+        res.status(400).send({
+          status: 400,
+          error: 'Failed to log out'
+        });
+      });
+  });
+
 };
