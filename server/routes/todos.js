@@ -3,9 +3,13 @@ module.exports = (app) => {
   const { ObjectID } = require('mongodb');
 
   const { Todo } = require('../models/todo');
+  const { authenticate } = require('../middleware/authenticate');
 
-  app.post('/todos', (req, res) => {
-    const newTodo = new Todo({ text: req.body.text });
+  app.post('/todos', authenticate, (req, res) => {
+    const newTodo = new Todo({
+      text: req.body.text,
+      _creator: req.user._id
+    });
     newTodo.save()
       .then(todo => {
         res.send({ status: 200, todo });
@@ -18,8 +22,8 @@ module.exports = (app) => {
       });
   });
 
-  app.get('/todos', (req, res) => {
-    Todo.find().then(todos => {
+  app.get('/todos', authenticate, (req, res) => {
+    Todo.find({ _creator: req.user._id }).then(todos => {
       res.send({ status: 200, todos });
     }).catch(e => {
       res.status(400).send({
@@ -29,7 +33,7 @@ module.exports = (app) => {
     });
   });
 
-  app.get('/todos/:id', (req, res) => {
+  app.get('/todos/:id', authenticate, (req, res) => {
     const id = req.params.id;
     if (!ObjectID.isValid(id)) {
       return res.status(404).send({
@@ -37,7 +41,10 @@ module.exports = (app) => {
         error: 'Invalid ID'
       });
     }
-    Todo.findById(id)
+    Todo.findOne({
+      _id: id,
+      _creator:req.user._id
+    })
       .then(todo => {
         if (!todo) {
           return res.status(404).send({
@@ -54,7 +61,7 @@ module.exports = (app) => {
       });
   });
 
-  app.delete('/todos/:id', (req, res) => {
+  app.delete('/todos/:id', authenticate, (req, res) => {
     const id = req.params.id;
     if (!ObjectID.isValid(id)) {
       return res.status(404).send({
@@ -62,7 +69,10 @@ module.exports = (app) => {
         error: 'Invalid ID'
       });
     }
-    Todo.findByIdAndRemove(id)
+    Todo.findOneAndRemove({
+      _id: id,
+      _creator: req.user._id
+    })
       .then(todo => {
         if (!todo) {
           return res.status(404).send({
@@ -80,7 +90,7 @@ module.exports = (app) => {
       });
   });
 
-  app.patch('/todos/:id', (req, res) => {
+  app.patch('/todos/:id', authenticate, (req, res) => {
     const id = req.params.id;
     const body = _.pick(req.body, ['text', 'completed']);
     if (!ObjectID.isValid(id)) {
@@ -95,7 +105,15 @@ module.exports = (app) => {
       body.completed = false;
       body.completedAt = null;
     }
-    Todo.findByIdAndUpdate(id, { $set: body }, { new: true, runValidators: true })
+    Todo.findOneAndUpdate({
+      _id: id,
+      _creator: req.user._id
+    }, {
+      $set: body
+    }, {
+      new: true,
+      runValidators: true
+    })
       .then(todo => {
         if (!todo) {
           return res.status(404).send({
