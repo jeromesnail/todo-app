@@ -177,6 +177,7 @@ describe('PATCH /todos/:id', () => {
       .expect(res => {
         expect(res.body.todo.text).toBe(text);
         expect(res.body.todo.completed).toBe(true);
+        expect(typeof res.body.todo.completedAt).toBe('number');
       })
       .end(done);
   });
@@ -190,7 +191,7 @@ describe('PATCH /todos/:id', () => {
       .expect(res => {
         expect(res.body.todo.text).toBe(text);
         expect(res.body.todo.completed).toBe(false);
-        expect(res.body.todo.completedAt).toNotExist();
+        expect(res.body.todo.completedAt).toBeFalsy();
       })
       .end(done);
   });
@@ -261,16 +262,16 @@ describe('POST /users', () => {
       .send({ email, password })
       .expect(200)
       .expect(res => {
-        expect(res.headers['x-auth']).toExist();
-        expect(res.body.user._id).toExist();
+        expect(res.headers['x-auth']).toBeTruthy();
+        expect(res.body.user._id).toBeTruthy();
         expect(res.body.user.email).toBe(email);
       })
       .end((e) => {
         if (e) return done(e);
         User.findOne({ email })
           .then(user => {
-            expect(user).toExist();
-            expect(user.password).toNotBe(password);
+            expect(user).toBeTruthy();
+            expect(user.password).not.toBe(password);
             done();
           });
       });
@@ -325,13 +326,13 @@ describe('POST /users/login', () => {
       .send({ email, password })
       .expect(200)
       .expect(res => {
-        expect(res.headers['x-auth']).toExist();
+        expect(res.headers['x-auth']).toBeTruthy();
       })
       .end((e, res) => {
         if (e) return done(e);
         User.findById(users[1]._id)
           .then(user => {
-            expect(user.tokens[1]).toInclude({
+            expect(user.toObject().tokens[1]).toMatchObject({
               access: 'auth',
               token: res.headers['x-auth']
             });
@@ -350,7 +351,7 @@ describe('POST /users/login', () => {
       .expect(400)
       .expect(res => {
         expect(res.body.error).toBe('Failed to anthentificate');
-        expect(res.headers['x-auth']).toNotExist();
+        expect(res.headers['x-auth']).toBeFalsy();
       })
       .end((e, res) => {
         if (e) return done(e);
